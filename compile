@@ -1,0 +1,92 @@
+#!/bin/bash
+
+#This script will act as a makefile for my adventures program
+#compile  will just compile the one c file (at this time)
+#compile -c will clear all compiled files
+#compule -r will compile and run the program
+key="keygen"
+dec="otp_dec"
+dec_bg="otp_dec_d"
+enc="otp_enc"
+enc_bg="otp_enc_d"
+
+port1=4500
+port2=$(($port1+20))
+if [[ $# > "1" ]];
+then	
+	echo "too many arguments."
+	echo "compile {-clear | -run} "
+	echo ""
+	exit 1
+fi
+
+if [[ $# = "0" ]];
+then
+	echo -e "Compile only\n"
+	gcc -o $key  $key.c 
+	gcc -o $dec  $dec.c 
+	gcc -o $dec_bg  $dec_bg.c 
+	gcc -o $enc  $enc.c 
+	gcc -o $enc_bg  $enc_bg.c 
+	exit 1
+fi
+
+if [[ $1 == -c* ]];
+then 
+	echo -e "Clear \n"
+	rm -f $key $dec $dec_bg $enc $enc_bg
+	rm -f ciphertext1 mykey plaintext1_a
+	exit 1
+elif [[ $1 == -r* ]];
+then
+	echo -e "Compile Run \n"
+	gcc -o $key  $key.c 
+	gcc -o $dec  $dec.c 
+	gcc -o $dec_bg  $dec_bg.c 
+	gcc -o $enc  $enc.c 
+	gcc -o $enc_bg  $enc_bg.c 
+	if [[ $? = 0 ]];
+    then
+		clear
+		sleep 1
+		$enc_bg $port1 &
+		PID1=$!
+		echo "Encription Server running port: " $port1 
+		$dec_bg $port2 &
+		PID2=$!
+		echo "Decription Server running port: " $port2
+		#echo "Checking background processes..."
+		#ps
+		sleep 2
+		$key 500 > mykey
+		echo "Key generated"
+		sleep 1
+		echo
+		echo -e "plaintext1:"
+		cat plaintext1
+		echo
+		echo "Runnign Encryption now...."
+		$enc plaintext1 mykey $port1 > ciphertext1
+		#$enc plaintext1 mykey $port1
+		echo
+		echo -e "\nciphertext1:"
+		cat ciphertext1
+		echo
+		echo "Running Decryption now...."
+		$dec ciphertext1 mykey $port2 > plaintext1_a
+		echo -e "\nplaintext1_a:"
+		cat plaintext1_a
+		kill $PID1
+		kill $PID2
+		echo
+		echo
+		
+		#echo "Checking running procces"
+		#ps
+	fi
+	exit 1
+else
+	echo "Invalid arguments..."
+	echo "compile {-clear | -run} "
+	exit 1
+fi

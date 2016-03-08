@@ -1,0 +1,40 @@
+#!/bin/bash
+
+inputfile=plaintext2
+
+clear
+port1=5010
+port2=5030
+compile -c
+compile 
+#sleep 1
+keygen 70000 > key40
+otp_enc_d $port1 &
+pid1=$!
+otp_dec_d $port2 &
+pid2=$!
+#sleep 1
+echo "Input file:"
+cat $inputfile
+echo
+otp_enc $inputfile key40 $port1 > codetext
+echo "Encrypted file:"
+cat codetext
+echo
+#sleep 1
+
+
+
+otp_dec codetext key40 $port2 > dectext 
+#otp_enc $inputfile key40 $port #> codetext
+#otp_enc $inputfile key40 $port #> codetext
+#otp_enc $inputfile key40 $port #> codetext
+#otp_enc $inputfile key40 $port #> codetext
+#otp_enc $inputfile key40 $port #> codetext
+echo "output text: "
+cat  dectext
+echo
+wc -m $inputfile
+wc -m codetext
+kill $pid1 $pid2
+ps
